@@ -45,38 +45,36 @@ The CC Diagnostic Tool is a lightweight, in-house system diagnostics utility dev
 
 ## 🗂 File Structure
 
+```text
 cc_diagnostics/
-├── diagnostics.py # Core scanner script
-├── output_parser.py # Converts raw data to readable summaries
-├── utils/ # Helper functions (temperature, SMART, etc.)
-├── report_templates/ # HTML or PDF templates (optional)
+├── diagnostics.py         # Core scanner script
+├── output_parser.py       # Converts raw data to readable summaries
+├── utils/                 # Helper functions (temperature, SMART, etc.)
+├── report_templates/      # HTML or PDF templates (optional)
 ├── logs/
-│ └── diagnostics/ # Saved JSON reports
-└── assets/ # Icons, branding
-
-yaml
-Copy
-Edit
+│   └── diagnostics/       # Saved JSON reports
+└── assets/                # Icons, branding
+```
 
 ---
 
 ## 📦 Setup
 
-1. Create a virtual environment:
-```
+1. Create and activate a virtual environment:
+```bash
 python -m venv .venv
-.venv\Scripts\activate  # or source .venv/bin/activate
+source .venv/bin/activate  # on Windows use .venv\Scripts\activate
 ```
 
 2. Install dependencies:
-```
+```bash
 pip install -r requirements.txt
 ```
-This installs the required `psutil` and `wmi` packages.
+This installs the `psutil` and `wmi` packages.
 
 3. Run a test scan:
-```
-python cc_diagnostics/diagnostics.py
+```bash
+python -m cc_diagnostics.diagnostics
 ```
 
 ---
@@ -105,4 +103,4 @@ python cc_diagnostics/diagnostics.py
 
 This utility replaces 5+ individual tools with one clean diagnostic output. If a system needs work — this catches it. If it doesn’t — it proves it.
 
-> “If it passes this tool, it's good enough to build on.”# CC-Diagnostics
+> “If it passes this tool, it's good enough to build on.”
