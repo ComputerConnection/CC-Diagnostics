@@ -9,6 +9,9 @@ from utils.temperature import get_temperatures
 from output_parser import interpret_report
 
 
+LOG_DIR = os.path.join(os.path.dirname(__file__), "logs", "diagnostics")
+
+
 def main():
     report = {
         "timestamp": datetime.now().isoformat(),
@@ -21,9 +24,12 @@ def main():
     summary = interpret_report(report)
     report.update(summary)
 
-    os.makedirs("logs/diagnostics", exist_ok=True)
+    os.makedirs(LOG_DIR, exist_ok=True)
     with open(
-        f"logs/diagnostics/diagnostic_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        os.path.join(
+            LOG_DIR,
+            f"diagnostic_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        ),
         "w",
     ) as f:
         json.dump(report, f, indent=2)
