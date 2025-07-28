@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 import subprocess
 
+import os
 import psutil
 
 
@@ -42,7 +43,8 @@ def _collect_smart_status(device: str) -> str:
 def check_disk_health() -> dict[str, object]:
     """Return overall disk usage and SMART health for detected drives."""
 
-    usage = psutil.disk_usage("/")
+    root_path = os.path.abspath(os.sep)
+    usage = psutil.disk_usage(root_path)
 
     health: dict[str, str] = {}
     seen: set[str] = set()
