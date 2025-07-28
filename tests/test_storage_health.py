@@ -23,3 +23,29 @@ def test_check_disk_health(monkeypatch):
     assert info["free_gb"] == 1.5
     assert info["used_percent"] == 25.0
     assert info["smart"] == {"/dev/sda1": "PASSED"}
+
+
+def test_check_disk_health_windows_root(monkeypatch):
+    usage = sdiskusage(total=1_000_000_000, used=400_000_000, free=600_000_000, percent=40.0)
+
+    def fake_abspath(path):
+        assert path == os.sep
+        return "C:\\"
+
+    called = {}
+
+    def fake_disk_usage(path):
+        called["path"] = path
+        return usage
+
+    monkeypatch.setattr(storage_health.os.path, "abspath", fake_abspath)
+    monkeypatch.setattr(storage_health.psutil, "disk_usage", fake_disk_usage)
+    monkeypatch.setattr(storage_health.psutil, "disk_partitions", lambda all=False: [])
+    monkeypatch.setattr(storage_health, "_collect_smart_status", lambda dev: "PASSED")
+
+    info = storage_health.check_disk_health()
+    assert called["path"] == "C:\\"
+    assert info["total_gb"] == 1.0
+    assert info["free_gb"] == 0.6
+    assert info["used_percent"] == 40.0
+    assert info["smart"] == {}
