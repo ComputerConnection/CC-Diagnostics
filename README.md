@@ -75,7 +75,11 @@ This installs the `psutil` and `wmi` packages.
 3. Run a test scan:
 ```bash
 python -m cc_diagnostics.diagnostics
+python -m cc_diagnostics.diagnostics --help
 ```
+
+The script accepts `--output-dir` to change where the JSON report is saved and
+`--verbose` to print progress details.
 
 ---
 
