@@ -63,26 +63,21 @@ Edit
 ## 📦 Setup
 
 1. Create a virtual environment:
+```
 python -m venv .venv
-.venv\Scripts\activate
-
-markdown
-Copy
-Edit
+.venv\Scripts\activate  # or source .venv/bin/activate
+```
 
 2. Install dependencies:
+```
 pip install -r requirements.txt
-
-bash
-Copy
-Edit
+```
+This installs the required `psutil` and `wmi` packages.
 
 3. Run a test scan:
+```
 python cc_diagnostics/diagnostics.py
-
-yaml
-Copy
-Edit
+```
 
 ---
 
