@@ -51,3 +51,16 @@ def test_export_latest_report_pdf(tmp_path):
     result = export_latest_report(out_dir, log_dir=log_dir, fmt="pdf")
     assert Path(result).exists()
 
+
+def test_export_latest_report_no_files(tmp_path):
+    log_dir = tmp_path / "logs"
+    log_dir.mkdir()
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    try:
+        export_latest_report(out_dir, log_dir=log_dir)
+    except FileNotFoundError as e:
+        assert "No diagnostic reports found" in str(e)
+    else:
+        assert False, "Expected FileNotFoundError"
+
