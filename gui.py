@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
 from cc_diagnostics import diagnostics
+from cc_diagnostics.report_renderer import export_latest_report
 
 
 class DiagnosticController(QObject):
@@ -26,6 +27,15 @@ class DiagnosticController(QObject):
 
         diagnostics.main([], progress_callback=cb)
         self.completed.emit("Scan complete")
+
+    @Slot(str)
+    def exportReport(self, directory: str) -> None:
+        """Export the most recent JSON report to ``directory`` as HTML."""
+        try:
+            path = export_latest_report(directory)
+            self.log.emit(f"Report exported to {path}")
+        except Exception as exc:  # pragma: no cover - user feedback
+            self.log.emit(f"Export failed: {exc}")
 
 
 def main() -> None:

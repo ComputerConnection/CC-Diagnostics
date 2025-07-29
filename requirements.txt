@@ -2,3 +2,4 @@ psutil
 wmi
 
 PySide6
+jinja2
