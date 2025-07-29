@@ -35,7 +35,10 @@ def render_pdf_report(report: dict[str, Any], output_path: str | Path, template_
 
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    pdfkit.from_string(html, str(out))
+    try:
+        pdfkit.from_string(html, str(out))
+    except OSError as e:
+        raise OSError("wkhtmltopdf not installed") from e
     return str(out)
 
 
