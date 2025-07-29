@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import "Styles.qml" as Styles
 
 Dialog {
     id: root
@@ -17,30 +18,36 @@ Dialog {
     title: qsTr("Settings")
 
     Column {
-        spacing: 10
+        spacing: Styles.spacingMedium
         anchors.fill: parent
-        anchors.margins: 20
+        anchors.margins: Styles.spacingLarge
 
         TextField {
             id: endpointField
             placeholderText: qsTr("Server Endpoint")
             text: root.serverEndpoint
+            font.family: Styles.fontFamily
+            font.pixelSize: Styles.fontSizeMedium
         }
 
         CheckBox {
             id: remoteCheck
             text: qsTr("Enable Remote Upload")
             checked: root.remoteUpload
+            font.family: Styles.fontFamily
+            font.pixelSize: Styles.fontSizeMedium
         }
 
         CheckBox {
             id: darkCheck
             text: qsTr("Dark Mode")
             checked: root.darkMode
+            font.family: Styles.fontFamily
+            font.pixelSize: Styles.fontSizeMedium
         }
 
         Row {
-            spacing: 8
+            spacing: Styles.spacingMedium
             Button {
                 text: qsTr("Save")
                 onClicked: {

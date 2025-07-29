@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import "Styles.qml" as Styles
 
 Page {
     id: root
@@ -14,28 +15,52 @@ Page {
     ColumnLayout {
         id: contentArea
         anchors.fill: parent
-        anchors.margins: 20
-        spacing: 12
+        anchors.margins: Styles.spacingLarge
+        spacing: Styles.spacingMedium
         opacity: root.loading ? 0 : 1
         Behavior on opacity { NumberAnimation { duration: 200 } }
 
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
-            Label { text: qsTr("Status:") }
-            Text { text: root.reportData.status || ""; font.bold: true }
+            spacing: Styles.spacingMedium
+            Label {
+                text: qsTr("Status:")
+                font.family: Styles.fontFamily
+                font.pixelSize: Styles.fontSizeMedium
+            }
+            Text {
+                text: root.reportData.status || ""
+                font.family: Styles.fontFamily
+                font.pixelSize: Styles.fontSizeMedium
+                font.bold: true
+                color: Styles.primaryColor
+            }
         }
 
         Column {
-            spacing: 4
+            spacing: Styles.spacingSmall
             visible: (root.reportData.warnings || []).length > 0
-            Label { text: qsTr("Warnings") ; font.bold: true }
+            Label {
+                text: qsTr("Warnings")
+                font.family: Styles.fontFamily
+                font.pixelSize: Styles.fontSizeMedium
+                font.bold: true
+                color: Styles.secondaryColor
+            }
             Repeater {
                 model: root.reportData.warnings || []
                 delegate: RowLayout {
-                    spacing: 6
-                    Label { text: Material.icons.warning }
-                    Text { text: modelData }
+                    spacing: Styles.spacingSmall
+                    Label {
+                        text: Material.icons.warning
+                        color: Styles.secondaryColor
+                        font.pixelSize: Styles.fontSizeMedium
+                    }
+                    Text {
+                        text: modelData
+                        font.family: Styles.fontFamily
+                        font.pixelSize: Styles.fontSizeSmall
+                    }
                 }
             }
         }
@@ -56,7 +81,7 @@ Page {
         anchors.centerIn: parent
         running: root.loading
         visible: root.loading
-        opacity: root.loading ? 1 : 0
+        opacity: root.loading ? Styles.overlayOpacity : 0
         Behavior on opacity { NumberAnimation { duration: 200 } }
     }
 }
