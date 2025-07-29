@@ -5,7 +5,7 @@ import App.Styles 1.0
 Rectangle {
     id: card
     radius: 6
-    color: Qt.application.palette.base
+    color: Qt.application.palette ? Qt.application.palette.base : "white"
     border.color: Styles.primaryColor
 
     property bool loading: false
