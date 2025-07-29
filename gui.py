@@ -75,11 +75,11 @@ class DiagnosticController(QObject):
     def setRemoteEnabled(self, enabled: bool) -> None:
         self._remote_enabled = enabled
 
-    @Slot(str)
-    def exportReport(self, directory: str) -> None:
-        """Export the most recent JSON report to ``directory`` as HTML."""
+    @Slot(str, str)
+    def exportReport(self, directory: str, fmt: str = "html") -> None:
+        """Export the most recent JSON report to ``directory`` as HTML or PDF."""
         try:
-            path = export_latest_report(directory)
+            path = export_latest_report(directory, fmt=fmt)
             self.log.emit(f"Report exported to {path}")
         except Exception as exc:  # pragma: no cover - user feedback
             self.log.emit(f"Export failed: {exc}")
