@@ -3,3 +3,4 @@ wmi
 
 PySide6
 jinja2
+pdfkit

@@ -13,6 +13,7 @@ ApplicationWindow {
     property var recommendationItems: []
     property bool remoteEnabled: false
     property string uploadStatus: ""
+    property string exportFormat: "html"
 
     SettingsDialog {
         id: settingsDialog
@@ -67,12 +68,20 @@ ApplicationWindow {
                 }
             }
 
+            ComboBox {
+                id: formatBox
+                model: ["HTML", "PDF"]
+                onActivated: {
+                    root.exportFormat = currentIndex === 0 ? "html" : "pdf"
+                }
+            }
+
             Button {
                 text: qsTr("Export")
                 icon.name: "save"
                 onClicked: {
                     var dir = StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-                    diagnostics.exportReport(dir)
+                    diagnostics.exportReport(dir, root.exportFormat)
                 }
             }
 

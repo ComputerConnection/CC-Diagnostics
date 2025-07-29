@@ -13,6 +13,7 @@ dependencies = [
     "wmi",
     "PySide6",
     "jinja2",
+    "pdfkit",
 ]
 requires-python = ">=3.11"
 classifiers = ["Programming Language :: Python :: 3"]
