@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import "Styles.qml" as Styles
+import App.Styles 1.0
 
 Rectangle {
     id: card
