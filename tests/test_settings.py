@@ -29,3 +29,16 @@ def test_update_setting(tmp_path, monkeypatch):
 
     data = json.loads(settings_file.read_text())
     assert data["server_endpoint"] == "http://new"
+
+
+def test_load_setting(tmp_path, monkeypatch):
+    settings_file = tmp_path / "settings.json"
+    settings_file.write_text('{"dark_mode": true}')
+    monkeypatch.setattr(diagnostics, "SETTINGS_FILE", settings_file)
+    from importlib import reload
+    import gui as gui_mod
+    reload(gui_mod)
+    monkeypatch.setattr(gui_mod, "SETTINGS_FILE", settings_file)
+
+    controller = gui_mod.DiagnosticController()
+    assert controller.loadSetting("dark_mode") is True

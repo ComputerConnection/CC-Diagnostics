@@ -1,5 +1,7 @@
 import QtQuick
 import QtQuick.Controls
+import "Styles.qml" as Styles
+import "."
 
 ApplicationWindow {
     id: root
@@ -7,6 +9,15 @@ ApplicationWindow {
     width: 400
     height: 300
     title: qsTr("CC Diagnostics")
+    property bool darkMode: false
+    Material.theme: darkMode ? Material.Dark : Material.Light
+
+    Component.onCompleted: {
+        var val = diagnostics.loadSetting("dark_mode")
+        if (val !== undefined && val !== null) {
+            darkMode = val
+        }
+    }
 
     property int progressValue: 0
     property string logText: ""
@@ -29,34 +40,42 @@ ApplicationWindow {
         id: mainPage
         Column {
             anchors.centerIn: parent
-            spacing: 20
+            spacing: Styles.spacingLarge
 
-            Text {
-                id: statusLabel
-                text: qsTr("Ready to scan")
-            }
+            StatusCard {
+                width: 360
+                content: Column {
+                    spacing: Styles.spacingMedium
+                    Text {
+                        id: statusLabel
+                        text: qsTr("Ready to scan")
+                    }
 
-            ProgressBar {
-                id: bar
-                from: 0
-                to: 100
-                value: root.progressValue
-                width: 300
-            }
+                    ProgressBar {
+                        id: bar
+                        from: 0
+                        to: 100
+                        value: root.progressValue
+                        width: 300
+                    }
 
-            Row {
-                spacing: 10
-                CheckBox {
-                    id: remoteToggle
-                    checked: root.remoteEnabled
-                    text: qsTr("Remote")
-                    onCheckedChanged: {
-                        root.remoteEnabled = checked
-                        diagnostics.setRemoteEnabled(checked)
+                    Row {
+                        spacing: Styles.spacingMedium
+                        CheckBox {
+                            id: remoteToggle
+                            checked: root.remoteEnabled
+                            text: qsTr("Remote")
+                            onCheckedChanged: {
+                                root.remoteEnabled = checked
+                                diagnostics.setRemoteEnabled(checked)
+                            }
+                        }
+                        Text { text: root.uploadStatus }
                     }
                 }
-                Text { text: root.uploadStatus }
             }
+
+
 
             Button {
                 text: qsTr("Run Scan")
