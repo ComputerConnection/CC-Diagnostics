@@ -53,6 +53,12 @@ class DiagnosticController(QObject):
             "storage": report.get("storage", {}),
         }
 
+    @Slot(str, result="QVariant")
+    def loadSetting(self, key: str):
+        """Return value of ``key`` from settings.json if present."""
+        settings = _load_settings()
+        return settings.get(key)
+
     @Slot()
     def runScan(self) -> None:
         def cb(pct: float, msg: str) -> None:

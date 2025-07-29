@@ -6,6 +6,13 @@ Dialog {
     modal: true
     property string serverEndpoint: ""
     property bool remoteUpload: false
+    property bool darkMode: false
+
+    onOpened: {
+        darkCheck.checked = root.parent.darkMode
+        endpointField.text = root.serverEndpoint
+        remoteCheck.checked = root.remoteUpload
+    }
 
     title: qsTr("Settings")
 
@@ -26,6 +33,12 @@ Dialog {
             checked: root.remoteUpload
         }
 
+        CheckBox {
+            id: darkCheck
+            text: qsTr("Dark Mode")
+            checked: root.darkMode
+        }
+
         Row {
             spacing: 8
             Button {
@@ -33,6 +46,9 @@ Dialog {
                 onClicked: {
                     diagnostics.updateSetting("server_endpoint", endpointField.text)
                     diagnostics.updateSetting("remote_upload", remoteCheck.checked)
+                    diagnostics.updateSetting("dark_mode", darkCheck.checked)
+                    root.darkMode = darkCheck.checked
+                    root.parent.darkMode = darkCheck.checked
                     root.close()
                 }
             }
