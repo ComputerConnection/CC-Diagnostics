@@ -1,0 +1,3 @@
+include settings.json
+recursive-include ui *.qml
+recursive-include cc_diagnostics/report_templates *.html

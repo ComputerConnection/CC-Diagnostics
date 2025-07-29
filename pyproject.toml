@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cc_diagnostics"
+version = "0.1.0"
+description = "System diagnostics utility"
+readme = "README.md"
+authors = [{name = "Computer Connection"}]
+dependencies = [
+    "psutil",
+    "wmi",
+    "PySide6",
+    "jinja2",
+]
+requires-python = ">=3.11"
+classifiers = ["Programming Language :: Python :: 3"]
+
+[project.scripts]
+cc-diagnostics = "cc_diagnostics.diagnostics:main"
+cc-diagnostics-gui = "gui:main"
+
+[tool.setuptools]
+packages = ["cc_diagnostics"]
+py-modules = ["gui"]
+include-package-data = true

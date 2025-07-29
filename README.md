@@ -81,6 +81,28 @@ python -m cc_diagnostics.diagnostics --help
 The script accepts `--output-dir` to change where the JSON report is saved and
 `--verbose` to print progress details.
 
+## 🛠 Packaging
+
+The project ships with a `pyproject.toml` allowing it to be installed with
+`pip`. Installing the package exposes two entry points:
+
+```bash
+pip install .
+# cc-diagnostics      -> command line interface
+# cc-diagnostics-gui  -> launches the Qt GUI
+```
+
+To create a self-contained executable you can use `PyInstaller`:
+
+```bash
+pip install pyinstaller
+pyinstaller --onefile --noconsole \
+  --add-data "ui/*.qml:ui" gui.py
+```
+
+The `--add-data` option ensures the QML assets are bundled. PyInstaller will
+include dependencies such as `psutil` and `wmi` automatically.
+
 ---
 
 ## 📌 Requirements
