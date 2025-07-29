@@ -10,6 +10,7 @@ from cc_diagnostics.report_renderer import (
     render_pdf_report,
     export_latest_report,
 )
+import cc_diagnostics.report_renderer as report_renderer
 
 
 def test_render_html_report(tmp_path):
@@ -63,4 +64,18 @@ def test_export_latest_report_no_files(tmp_path):
         assert "No diagnostic reports found" in str(e)
     else:
         assert False, "Expected FileNotFoundError"
+
+
+def test_render_pdf_missing_binary(tmp_path, monkeypatch):
+    def raise_error(*args, **kwargs):
+        raise OSError("not found")
+
+    monkeypatch.setattr(report_renderer.pdfkit, "from_string", raise_error)
+
+    try:
+        render_pdf_report({"status": "OK"}, tmp_path / "report.pdf")
+    except OSError as e:
+        assert "wkhtmltopdf not installed" in str(e)
+    else:
+        assert False, "Expected OSError"
 
