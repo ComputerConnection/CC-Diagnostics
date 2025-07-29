@@ -11,6 +11,9 @@ from PySide6.QtQml import QQmlApplicationEngine
 from cc_diagnostics import diagnostics
 from cc_diagnostics.report_renderer import export_latest_report
 
+# reuse settings loader from diagnostics
+from cc_diagnostics.diagnostics import _load_settings
+
 
 class DiagnosticController(QObject):
     """Expose diagnostics functionality to QML."""
@@ -19,6 +22,11 @@ class DiagnosticController(QObject):
     log = Signal(str)
     completed = Signal(str)
     recommendationsUpdated = Signal(list)
+    uploadStatus = Signal(str)
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._remote_enabled = False
 
     @Slot()
     def runScan(self) -> None:
@@ -27,9 +35,20 @@ class DiagnosticController(QObject):
             self.progress.emit(percent, msg)
             self.log.emit(msg)
 
-        report = diagnostics.main([], progress_callback=cb)
+        args = []
+        if self._remote_enabled:
+            endpoint = _load_settings().get("server_endpoint")
+            if endpoint:
+                args.extend(["--server-endpoint", endpoint])
+
+        report = diagnostics.main(args, progress_callback=cb)
         self.recommendationsUpdated.emit(report.get("recommendations", []))
         self.completed.emit("Scan complete")
+        self.uploadStatus.emit(report.get("upload_status", "disabled"))
+
+    @Slot(bool)
+    def setRemoteEnabled(self, enabled: bool) -> None:
+        self._remote_enabled = enabled
 
     @Slot(str)
     def exportReport(self, directory: str) -> None:
