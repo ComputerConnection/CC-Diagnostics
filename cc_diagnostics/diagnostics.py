@@ -43,7 +43,7 @@ ProgressCallback = Callable[[float, str], None]
 def main(
     argv: Sequence[str] | None = None,
     progress_callback: ProgressCallback | None = None,
-) -> None:
+) -> dict:
     opts = parse_args(argv)
 
     def emit(progress: float, message: str) -> None:
@@ -87,6 +87,7 @@ def main(
         json.dump(report, f, indent=2)
 
     emit(1.0, f"Report written to {out_file}")
+    return report
 
 
 if __name__ == "__main__":
