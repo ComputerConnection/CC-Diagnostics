@@ -13,11 +13,18 @@ from cc_diagnostics import diagnostics
 class DiagnosticController(QObject):
     """Expose diagnostics functionality to QML."""
 
+    progress = Signal(int, str)
+    log = Signal(str)
     completed = Signal(str)
 
     @Slot()
     def runScan(self) -> None:
-        diagnostics.main([])
+        def cb(pct: float, msg: str) -> None:
+            percent = int(pct * 100)
+            self.progress.emit(percent, msg)
+            self.log.emit(msg)
+
+        diagnostics.main([], progress_callback=cb)
         self.completed.emit("Scan complete")
 
 
