@@ -6,8 +6,6 @@ import "."
 ApplicationWindow {
     id: root
     visible: true
-    width: 400
-    height: 300
     title: qsTr("CC Diagnostics")
     property bool darkMode: false
     Material.theme: darkMode ? Material.Dark : Material.Light
@@ -39,12 +37,13 @@ ApplicationWindow {
 
     Component {
         id: mainPage
-        Column {
-            anchors.centerIn: parent
+        ColumnLayout {
+            anchors.fill: parent
+            anchors.margins: Styles.spacingLarge
             spacing: Styles.spacingLarge
 
             StatusCard {
-                width: 360
+                Layout.fillWidth: true
                 loading: root.scanRunning
                 content: Column {
                     spacing: Styles.spacingMedium
@@ -58,7 +57,7 @@ ApplicationWindow {
                         from: 0
                         to: 100
                         value: root.progressValue
-                        width: 300
+                        Layout.fillWidth: true
                     }
 
                     Row {
@@ -118,8 +117,8 @@ ApplicationWindow {
                 id: logArea
                 text: root.logText
                 readOnly: true
-                width: 350
-                height: 120
+                Layout.fillWidth: true
+                Layout.preferredHeight: 120
             }
 
             Recommendations {
@@ -133,6 +132,7 @@ ApplicationWindow {
         id: reportPage
         ReportView {
             id: reportView
+            anchors.fill: parent
             onBackRequested: stack.pop()
         }
     }
