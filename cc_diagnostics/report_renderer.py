@@ -47,7 +47,10 @@ def export_latest_report(
 ) -> str:
     """Render the newest JSON report in ``log_dir`` to ``output_dir`` as ``fmt``."""
     log_dir = Path(log_dir) if log_dir else LOG_DIR
-    latest_json = max(log_dir.glob("diagnostic_*.json"), key=lambda p: p.stat().st_mtime)
+    json_files = list(log_dir.glob("diagnostic_*.json"))
+    if not json_files:
+        raise FileNotFoundError(f"No diagnostic reports found in {log_dir}")
+    latest_json = max(json_files, key=lambda p: p.stat().st_mtime)
     report = json.loads(latest_json.read_text())
 
     output_dir = Path(output_dir)
