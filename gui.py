@@ -14,7 +14,7 @@ from cc_diagnostics import diagnostics
 from cc_diagnostics.report_renderer import export_latest_report
 
 # reuse settings loader from diagnostics
-from cc_diagnostics.diagnostics import _load_settings
+from cc_diagnostics.diagnostics import _load_settings, SETTINGS_FILE
 
 
 class DiagnosticController(QObject):
@@ -35,7 +35,10 @@ class DiagnosticController(QObject):
         """Return parsed data from the newest diagnostic JSON report."""
         log_dir = Path(diagnostics.LOG_DIR)
         try:
-            latest = max(log_dir.glob("diagnostic_*.json"), key=lambda p: p.stat().st_mtime)
+            latest = max(
+                log_dir.glob("diagnostic_*.json"),
+                key=lambda p: (p.stat().st_mtime, p.name),
+            )
         except ValueError:
             return {}
         try:
@@ -92,6 +95,13 @@ class DiagnosticController(QObject):
         url = links.get(action_id)
         if url:
             QDesktopServices.openUrl(QUrl(url))
+
+    @Slot(str, "QVariant")
+    def updateSetting(self, key: str, value) -> None:
+        """Update ``key`` in settings.json with ``value``."""
+        settings = _load_settings()
+        settings[key] = value
+        SETTINGS_FILE.write_text(json.dumps(settings, indent=2))
 
 
 def main() -> None:

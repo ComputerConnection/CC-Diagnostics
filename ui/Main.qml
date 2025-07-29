@@ -14,6 +14,10 @@ ApplicationWindow {
     property bool remoteEnabled: false
     property string uploadStatus: ""
 
+    SettingsDialog {
+        id: settingsDialog
+    }
+
     StackView {
         id: stack
         anchors.fill: parent
@@ -70,6 +74,12 @@ ApplicationWindow {
                     var dir = StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
                     diagnostics.exportReport(dir)
                 }
+            }
+
+            Button {
+                text: qsTr("Settings")
+                icon.name: "settings"
+                onClicked: settingsDialog.open()
             }
 
             TextArea {
