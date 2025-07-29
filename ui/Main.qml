@@ -37,6 +37,14 @@ ApplicationWindow {
             }
         }
 
+        Button {
+            text: qsTr("Export")
+            onClicked: {
+                var dir = StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+                diagnostics.exportReport(dir)
+            }
+        }
+
         TextArea {
             id: logArea
             text: root.logText

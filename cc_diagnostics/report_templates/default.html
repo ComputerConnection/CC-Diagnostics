@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Diagnostic Report</title>
+</head>
+<body>
+    <h1>System Report</h1>
+    <p>Status: {{ report.status }}</p>
+    <h2>Warnings</h2>
+    <ul>
+    {% if report.warnings %}
+        {% for warn in report.warnings %}
+        <li>{{ warn }}</li>
+        {% endfor %}
+    {% else %}
+        <li>None</li>
+    {% endif %}
+    </ul>
+</body>
+</html>
