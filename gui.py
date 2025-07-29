@@ -5,7 +5,7 @@ import json
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Slot, Signal, QUrl
+from PySide6.QtCore import QObject, Slot, Signal, QUrl, QThread
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
@@ -15,6 +15,27 @@ from cc_diagnostics.report_renderer import export_latest_report
 
 # reuse settings loader from diagnostics
 from cc_diagnostics.diagnostics import _load_settings, SETTINGS_FILE
+
+
+class DiagnosticWorker(QThread):
+    """Background thread to run ``diagnostics.main``."""
+
+    progress = Signal(int, str)
+    log = Signal(str)
+    finished = Signal(dict)
+
+    def __init__(self, args: list[str] | None = None) -> None:
+        super().__init__()
+        self._args = args or []
+
+    def run(self) -> None:  # pragma: no cover - threads hard to test
+        def cb(pct: float, msg: str) -> None:
+            percent = int(pct * 100)
+            self.progress.emit(percent, msg)
+            self.log.emit(msg)
+
+        report = diagnostics.main(self._args, progress_callback=cb)
+        self.finished.emit(report)
 
 
 class DiagnosticController(QObject):
@@ -30,6 +51,7 @@ class DiagnosticController(QObject):
     def __init__(self) -> None:
         super().__init__()
         self._remote_enabled = False
+        self._worker: DiagnosticWorker | None = None
 
     @Slot(result="QVariant")
     def loadLatestReport(self) -> dict:
@@ -63,22 +85,27 @@ class DiagnosticController(QObject):
     @Slot()
     def runScan(self) -> None:
         self.loading.emit(True)
-        def cb(pct: float, msg: str) -> None:
-            percent = int(pct * 100)
-            self.progress.emit(percent, msg)
-            self.log.emit(msg)
-
         args = []
         if self._remote_enabled:
             endpoint = _load_settings().get("server_endpoint")
             if endpoint:
                 args.extend(["--server-endpoint", endpoint])
 
-        report = diagnostics.main(args, progress_callback=cb)
+        worker = DiagnosticWorker(args)
+        self._worker = worker  # keep reference
+        worker.progress.connect(self.progress)
+        worker.log.connect(self.log)
+        worker.finished.connect(self._on_worker_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    def _on_worker_finished(self, report: dict) -> None:
+        """Handle worker completion."""
         self.recommendationsUpdated.emit(report.get("recommendations", []))
         self.completed.emit("Scan complete")
         self.uploadStatus.emit(report.get("upload_status", "disabled"))
         self.loading.emit(False)
+        self._worker = None
 
     @Slot(bool)
     def setRemoteEnabled(self, enabled: bool) -> None:
