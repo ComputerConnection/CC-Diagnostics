@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import "Styles.qml" as Styles
+import App.Styles 1.0
 
 Page {
     id: root

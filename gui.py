@@ -9,7 +9,7 @@ try:  # pragma: no cover - optional GUI dependencies
     from PySide6.QtCore import QObject, Slot, Signal, QUrl, QThread
     from PySide6.QtGui import QDesktopServices
     from PySide6.QtWidgets import QApplication
-    from PySide6.QtQml import QQmlApplicationEngine
+    from PySide6.QtQml import QQmlApplicationEngine, qmlRegisterSingletonType
 except Exception:  # PySide6 may be missing or fail to load
     QObject = object
     def Slot(*args, **kwargs):  # type: ignore[misc]
@@ -31,6 +31,8 @@ except Exception:  # PySide6 may be missing or fail to load
             pass
     QApplication = None
     QQmlApplicationEngine = None
+    def qmlRegisterSingletonType(*args, **kwargs):  # type: ignore[misc]
+        return 0
 
 from cc_diagnostics import diagnostics
 from cc_diagnostics.report_renderer import export_latest_report
@@ -168,6 +170,12 @@ def main() -> None:
     engine = QQmlApplicationEngine()
     controller = DiagnosticController()
     engine.rootContext().setContextProperty("diagnostics", controller)
+
+    styles_path = Path(__file__).parent / "ui" / "Styles.qml"
+    qmlRegisterSingletonType(
+        QUrl.fromLocalFile(str(styles_path.resolve())),
+        "App.Styles", 1, 0, "Styles"
+    )
 
     qml_path = Path(__file__).parent / "ui" / "Main.qml"
     engine.load(qml_path.as_posix())
