@@ -5,10 +5,32 @@ import json
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Slot, Signal, QUrl, QThread
-from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QApplication
-from PySide6.QtQml import QQmlApplicationEngine
+try:  # pragma: no cover - optional GUI dependencies
+    from PySide6.QtCore import QObject, Slot, Signal, QUrl, QThread
+    from PySide6.QtGui import QDesktopServices
+    from PySide6.QtWidgets import QApplication
+    from PySide6.QtQml import QQmlApplicationEngine
+except Exception:  # PySide6 may be missing or fail to load
+    QObject = object
+    def Slot(*args, **kwargs):  # type: ignore[misc]
+        def decorator(func):
+            return func
+        return decorator
+    class Signal:  # minimal stub for tests
+        def __init__(self, *a, **k):
+            pass
+        def connect(self, *a, **k):  # pragma: no cover - dummy
+            pass
+        def emit(self, *a, **k):  # pragma: no cover - dummy
+            pass
+    QUrl = type("QUrl", (), {})  # type: ignore[misc]
+    QThread = object
+    class QDesktopServices:  # type: ignore[misc]
+        @staticmethod
+        def openUrl(url):
+            pass
+    QApplication = None
+    QQmlApplicationEngine = None
 
 from cc_diagnostics import diagnostics
 from cc_diagnostics.report_renderer import export_latest_report

@@ -27,15 +27,19 @@ def _load_settings() -> dict:
         return {}
 
 
-def _upload_report(endpoint: str, report: dict) -> bool:
-    """Send ``report`` as JSON to ``endpoint`` via HTTP POST."""
+def _upload_report(endpoint: str, report: dict) -> tuple[bool, str | None]:
+    """Send ``report`` as JSON to ``endpoint`` via HTTP POST.
+
+    Returns a tuple ``(success, error)`` where ``error`` is ``None`` when the
+    upload succeeds or the stringified exception if it fails.
+    """
     data = json.dumps(report).encode("utf-8")
     req = request.Request(endpoint, data=data, headers={"Content-Type": "application/json"})
     try:
         request.urlopen(req, timeout=10)
-        return True
-    except Exception:
-        return False
+        return True, None
+    except Exception as exc:  # pragma: no cover - network
+        return False, str(exc)
 
 
 def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
@@ -116,15 +120,21 @@ def main(
         json.dump(report, f, indent=2)
 
     upload_ok: bool | None = None
+    upload_error: str | None = None
     if endpoint:
         emit(0.95, "Uploading report")
-        upload_ok = _upload_report(endpoint, report)
-        msg = "Upload successful" if upload_ok else "Upload failed"
-        emit(0.97, msg)
+        upload_ok, upload_error = _upload_report(endpoint, report)
+        if upload_ok:
+            emit(0.97, "Upload successful")
+        else:
+            msg = f"Upload failed: {upload_error}"
+            emit(0.97, msg)
 
     emit(1.0, f"Report written to {out_file}")
     if endpoint:
         report["upload_status"] = "success" if upload_ok else "failed"
+        if not upload_ok and upload_error is not None:
+            report["upload_error"] = upload_error
     else:
         report["upload_status"] = "disabled"
     return report
