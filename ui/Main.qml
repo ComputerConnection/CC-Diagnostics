@@ -10,6 +10,7 @@ ApplicationWindow {
 
     property int progressValue: 0
     property string logText: ""
+    property var recommendationItems: []
 
     Column {
         anchors.centerIn: parent
@@ -52,6 +53,11 @@ ApplicationWindow {
             width: 350
             height: 120
         }
+
+        Recommendations {
+            id: recList
+            items: root.recommendationItems
+        }
     }
 
     Connections {
@@ -65,6 +71,9 @@ ApplicationWindow {
         }
         function onCompleted(msg) {
             statusLabel.text = msg
+        }
+        function onRecommendationsUpdated(list) {
+            root.recommendationItems = list
         }
     }
 }

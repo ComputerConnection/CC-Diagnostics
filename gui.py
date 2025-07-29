@@ -3,7 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QObject, Slot, Signal
+from PySide6.QtCore import QObject, Slot, Signal, QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -17,6 +18,7 @@ class DiagnosticController(QObject):
     progress = Signal(int, str)
     log = Signal(str)
     completed = Signal(str)
+    recommendationsUpdated = Signal(list)
 
     @Slot()
     def runScan(self) -> None:
@@ -25,7 +27,8 @@ class DiagnosticController(QObject):
             self.progress.emit(percent, msg)
             self.log.emit(msg)
 
-        diagnostics.main([], progress_callback=cb)
+        report = diagnostics.main([], progress_callback=cb)
+        self.recommendationsUpdated.emit(report.get("recommendations", []))
         self.completed.emit("Scan complete")
 
     @Slot(str)
@@ -36,6 +39,18 @@ class DiagnosticController(QObject):
             self.log.emit(f"Report exported to {path}")
         except Exception as exc:  # pragma: no cover - user feedback
             self.log.emit(f"Export failed: {exc}")
+
+    @Slot(str)
+    def runAction(self, action_id: str) -> None:
+        """Launch helper script or open documentation for ``action_id``."""
+        links = {
+            "upgrade_ram": "https://example.com/upgrade_ram",
+            "disk_cleanup": "https://example.com/disk_cleanup",
+        }
+
+        url = links.get(action_id)
+        if url:
+            QDesktopServices.openUrl(QUrl(url))
 
 
 def main() -> None:

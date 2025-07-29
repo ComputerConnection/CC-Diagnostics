@@ -17,7 +17,12 @@ Returns
 dict
     A summary dictionary with the following structure:
 
-    ``{"status": "OK" | "WARN", "warnings": list[str], "recommendations": list[str]}``
+    ``{"status": "OK" | "WARN", "warnings": list[str], ``
+    ``"recommendations": list[dict]}``
+
+    Each recommendation dictionary provides ``"text"`` describing the
+    suggestion and ``"action"`` as a short identifier that can be used by
+    the UI to offer contextual help or automation.
 """
 
 def interpret_report(report):
@@ -26,11 +31,17 @@ def interpret_report(report):
 
     if report["system"].get("RAM_GB", 0) < 8:
         warnings.append("Low Memory")
-        recommendations.append("Recommend upgrading RAM")
+        recommendations.append({
+            "text": "Recommend upgrading RAM",
+            "action": "upgrade_ram",
+        })
 
     if report["storage"].get("used_percent", 0) > 90:
         warnings.append("Disk Almost Full")
-        recommendations.append("Free up space or upgrade drive")
+        recommendations.append({
+            "text": "Free up space or upgrade drive",
+            "action": "disk_cleanup",
+        })
 
     return {
         "status": "WARN" if warnings else "OK",

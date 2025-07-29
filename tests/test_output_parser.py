@@ -26,5 +26,9 @@ def test_interpret_report_warns():
     assert summary["status"] == "WARN"
     assert "Low Memory" in summary["warnings"]
     assert "Disk Almost Full" in summary["warnings"]
-    assert "Recommend upgrading RAM" in summary["recommendations"]
-    assert "Free up space or upgrade drive" in summary["recommendations"]
+    texts = [r["text"] for r in summary["recommendations"]]
+    actions = [r["action"] for r in summary["recommendations"]]
+    assert "Recommend upgrading RAM" in texts
+    assert "Free up space or upgrade drive" in texts
+    assert "upgrade_ram" in actions
+    assert "disk_cleanup" in actions
