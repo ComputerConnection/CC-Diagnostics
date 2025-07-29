@@ -4,7 +4,7 @@ import argparse
 import json
 import os
 from datetime import datetime
-from typing import Sequence
+from typing import Callable, Sequence
 
 from cc_diagnostics.utils.system_info import get_system_info
 from cc_diagnostics.utils.storage_health import check_disk_health
@@ -35,22 +35,47 @@ def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(args)
 
 
-def main(argv: Sequence[str] | None = None) -> None:
+# ``progress`` ranges from 0.0 to 1.0 while ``message`` provides a description
+# of the current step.
+ProgressCallback = Callable[[float, str], None]
+
+
+def main(
+    argv: Sequence[str] | None = None,
+    progress_callback: ProgressCallback | None = None,
+) -> None:
     opts = parse_args(argv)
+
+    def emit(progress: float, message: str) -> None:
+        if progress_callback:
+            progress_callback(progress, message)
+        elif opts.verbose:
+            percent = int(progress * 100)
+            print(f"[{percent}%] {message}")
 
     log_dir = os.path.abspath(opts.output_dir)
 
-    if opts.verbose:
+    if opts.verbose and not progress_callback:
         print(f"Using output directory: {log_dir}")
+
+    emit(0.0, "Collecting system information")
+    system = get_system_info()
+    emit(0.25, "Checking disk health")
+    storage = check_disk_health()
+    emit(0.5, "Checking Windows 11 compatibility")
+    windows11 = check_windows11_compat()
+    emit(0.75, "Retrieving temperature data")
+    temps = get_temperatures()
 
     report = {
         "timestamp": datetime.now().isoformat(),
-        "system": get_system_info(),
-        "storage": check_disk_health(),
-        "windows11": check_windows11_compat(),
-        "temps": get_temperatures(),
+        "system": system,
+        "storage": storage,
+        "windows11": windows11,
+        "temps": temps,
     }
 
+    emit(0.9, "Interpreting results")
     summary = interpret_report(report)
     report.update(summary)
 
@@ -61,8 +86,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     with open(out_file, "w") as f:
         json.dump(report, f, indent=2)
 
-    if opts.verbose:
-        print(f"Report written to {out_file}")
+    emit(1.0, f"Report written to {out_file}")
 
 
 if __name__ == "__main__":

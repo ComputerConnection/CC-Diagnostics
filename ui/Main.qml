@@ -8,6 +8,9 @@ ApplicationWindow {
     height: 300
     title: qsTr("CC Diagnostics")
 
+    property int progressValue: 0
+    property string logText: ""
+
     Column {
         anchors.centerIn: parent
         spacing: 20
@@ -17,9 +20,43 @@ ApplicationWindow {
             text: qsTr("Ready to scan")
         }
 
+        ProgressBar {
+            id: bar
+            from: 0
+            to: 100
+            value: root.progressValue
+            width: 300
+        }
+
         Button {
             text: qsTr("Run Scan")
-            onClicked: diagnostics.runScan()
+            onClicked: {
+                root.progressValue = 0
+                root.logText = ""
+                diagnostics.runScan()
+            }
+        }
+
+        TextArea {
+            id: logArea
+            text: root.logText
+            readOnly: true
+            width: 350
+            height: 120
+        }
+    }
+
+    Connections {
+        target: diagnostics
+        function onProgress(percent, message) {
+            root.progressValue = percent
+            root.logText += message + "\n"
+        }
+        function onLog(message) {
+            root.logText += message + "\n"
+        }
+        function onCompleted(msg) {
+            statusLabel.text = msg
         }
     }
 }
