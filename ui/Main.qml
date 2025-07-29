@@ -11,6 +11,8 @@ ApplicationWindow {
     property int progressValue: 0
     property string logText: ""
     property var recommendationItems: []
+    property bool remoteEnabled: false
+    property string uploadStatus: ""
 
     Column {
         anchors.centerIn: parent
@@ -27,6 +29,20 @@ ApplicationWindow {
             to: 100
             value: root.progressValue
             width: 300
+        }
+
+        Row {
+            spacing: 10
+            CheckBox {
+                id: remoteToggle
+                checked: root.remoteEnabled
+                text: qsTr("Remote")
+                onCheckedChanged: {
+                    root.remoteEnabled = checked
+                    diagnostics.setRemoteEnabled(checked)
+                }
+            }
+            Text { text: root.uploadStatus }
         }
 
         Button {
@@ -74,6 +90,9 @@ ApplicationWindow {
         }
         function onRecommendationsUpdated(list) {
             root.recommendationItems = list
+        }
+        function onUploadStatus(status) {
+            root.uploadStatus = status
         }
     }
 }

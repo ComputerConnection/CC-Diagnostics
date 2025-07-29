@@ -5,6 +5,8 @@ import json
 import os
 from datetime import datetime
 from typing import Callable, Sequence
+from pathlib import Path
+from urllib import request, error
 
 from cc_diagnostics.utils.system_info import get_system_info
 from cc_diagnostics.utils.storage_health import check_disk_health
@@ -14,6 +16,26 @@ from cc_diagnostics.output_parser import interpret_report
 
 
 LOG_DIR = os.path.join(os.path.dirname(__file__), "logs", "diagnostics")
+SETTINGS_FILE = Path(__file__).resolve().parent.parent / "settings.json"
+
+
+def _load_settings() -> dict:
+    """Load settings.json from the project root if available."""
+    try:
+        return json.loads(SETTINGS_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def _upload_report(endpoint: str, report: dict) -> bool:
+    """Send ``report`` as JSON to ``endpoint`` via HTTP POST."""
+    data = json.dumps(report).encode("utf-8")
+    req = request.Request(endpoint, data=data, headers={"Content-Type": "application/json"})
+    try:
+        request.urlopen(req, timeout=10)
+        return True
+    except Exception:
+        return False
 
 
 def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
@@ -32,6 +54,11 @@ def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Print progress information to stdout.",
     )
+    parser.add_argument(
+        "--server-endpoint",
+        default=None,
+        help="URL to POST the report JSON to. Overrides settings.json if provided.",
+    )
     return parser.parse_args(args)
 
 
@@ -45,6 +72,8 @@ def main(
     progress_callback: ProgressCallback | None = None,
 ) -> dict:
     opts = parse_args(argv)
+    settings = _load_settings()
+    endpoint = opts.server_endpoint if opts.server_endpoint is not None else settings.get("server_endpoint")
 
     def emit(progress: float, message: str) -> None:
         if progress_callback:
@@ -86,7 +115,18 @@ def main(
     with open(out_file, "w") as f:
         json.dump(report, f, indent=2)
 
+    upload_ok: bool | None = None
+    if endpoint:
+        emit(0.95, "Uploading report")
+        upload_ok = _upload_report(endpoint, report)
+        msg = "Upload successful" if upload_ok else "Upload failed"
+        emit(0.97, msg)
+
     emit(1.0, f"Report written to {out_file}")
+    if endpoint:
+        report["upload_status"] = "success" if upload_ok else "failed"
+    else:
+        report["upload_status"] = "disabled"
     return report
 
 
