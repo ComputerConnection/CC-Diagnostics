@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import json
 import sys
 from pathlib import Path
 
@@ -27,6 +29,26 @@ class DiagnosticController(QObject):
     def __init__(self) -> None:
         super().__init__()
         self._remote_enabled = False
+
+    @Slot(result="QVariant")
+    def loadLatestReport(self) -> dict:
+        """Return parsed data from the newest diagnostic JSON report."""
+        log_dir = Path(diagnostics.LOG_DIR)
+        try:
+            latest = max(log_dir.glob("diagnostic_*.json"), key=lambda p: p.stat().st_mtime)
+        except ValueError:
+            return {}
+        try:
+            report = json.loads(latest.read_text())
+        except Exception:
+            return {}
+        return {
+            "status": report.get("status", ""),
+            "warnings": report.get("warnings", []),
+            "recommendations": report.get("recommendations", []),
+            "system": report.get("system", {}),
+            "storage": report.get("storage", {}),
+        }
 
     @Slot()
     def runScan(self) -> None:
@@ -73,6 +95,7 @@ class DiagnosticController(QObject):
 
 
 def main() -> None:
+    os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "Material")
     app = QApplication(sys.argv)
     engine = QQmlApplicationEngine()
     controller = DiagnosticController()
