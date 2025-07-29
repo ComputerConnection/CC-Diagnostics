@@ -25,6 +25,7 @@ class DiagnosticController(QObject):
     completed = Signal(str)
     recommendationsUpdated = Signal(list)
     uploadStatus = Signal(str)
+    loading = Signal(bool)
 
     def __init__(self) -> None:
         super().__init__()
@@ -61,6 +62,7 @@ class DiagnosticController(QObject):
 
     @Slot()
     def runScan(self) -> None:
+        self.loading.emit(True)
         def cb(pct: float, msg: str) -> None:
             percent = int(pct * 100)
             self.progress.emit(percent, msg)
@@ -76,6 +78,7 @@ class DiagnosticController(QObject):
         self.recommendationsUpdated.emit(report.get("recommendations", []))
         self.completed.emit("Scan complete")
         self.uploadStatus.emit(report.get("upload_status", "disabled"))
+        self.loading.emit(False)
 
     @Slot(bool)
     def setRemoteEnabled(self, enabled: bool) -> None:
