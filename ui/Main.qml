@@ -25,6 +25,7 @@ ApplicationWindow {
     property bool remoteEnabled: false
     property string uploadStatus: ""
     property string exportFormat: "html"
+    property bool scanRunning: false
 
     SettingsDialog {
         id: settingsDialog
@@ -44,6 +45,7 @@ ApplicationWindow {
 
             StatusCard {
                 width: 360
+                loading: root.scanRunning
                 content: Column {
                     spacing: Styles.spacingMedium
                     Text {
@@ -83,6 +85,8 @@ ApplicationWindow {
                 onClicked: {
                     root.progressValue = 0
                     root.logText = ""
+                    root.scanRunning = true
+                    reportView.loading = true
                     diagnostics.runScan()
                 }
             }
@@ -146,12 +150,19 @@ ApplicationWindow {
             statusLabel.text = msg
             reportView.reportData = diagnostics.loadLatestReport()
             stack.push(reportPage)
+            root.scanRunning = false
         }
         function onRecommendationsUpdated(list) {
             root.recommendationItems = list
         }
         function onUploadStatus(status) {
             root.uploadStatus = status
+        }
+        function onLoading(flag) {
+            root.scanRunning = flag
+            if (flag) {
+                reportView.loading = true
+            }
         }
     }
 }
