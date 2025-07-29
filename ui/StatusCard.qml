@@ -17,15 +17,15 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: Styles.spacingMedium
         spacing: Styles.spacingSmall
-        opacity: card.loading ? 0 : 1
+        opacity: card.loading ? Styles.disabledOpacity : 1
         Behavior on opacity { NumberAnimation { duration: 200 } }
     }
 
     Rectangle {
         anchors.fill: parent
         radius: 6
-        color: Qt.lighter(Styles.primaryColor, 1.5)
-        opacity: card.loading ? 1 : 0
+        color: Qt.lighter(Styles.secondaryColor, 1.5)
+        opacity: card.loading ? Styles.overlayOpacity : 0
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: 200 } }
 

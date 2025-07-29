@@ -50,6 +50,9 @@ ApplicationWindow {
                     Text {
                         id: statusLabel
                         text: qsTr("Ready to scan")
+                        font.family: Styles.fontFamily
+                        font.pixelSize: Styles.fontSizeLarge
+                        color: Styles.primaryColor
                     }
 
                     ProgressBar {
@@ -66,12 +69,19 @@ ApplicationWindow {
                             id: remoteToggle
                             checked: root.remoteEnabled
                             text: qsTr("Remote")
+                            font.family: Styles.fontFamily
+                            font.pixelSize: Styles.fontSizeMedium
                             onCheckedChanged: {
                                 root.remoteEnabled = checked
                                 diagnostics.setRemoteEnabled(checked)
                             }
                         }
-                        Text { text: root.uploadStatus }
+                        Text {
+                            text: root.uploadStatus
+                            font.family: Styles.fontFamily
+                            font.pixelSize: Styles.fontSizeSmall
+                            color: Styles.secondaryColor
+                        }
                     }
                 }
             }
@@ -119,6 +129,8 @@ ApplicationWindow {
                 readOnly: true
                 Layout.fillWidth: true
                 Layout.preferredHeight: 120
+                font.family: Styles.fontFamily
+                font.pixelSize: Styles.fontSizeSmall
             }
 
             Recommendations {

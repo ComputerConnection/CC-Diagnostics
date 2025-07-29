@@ -58,6 +58,28 @@ cc_diagnostics/
 
 ---
 
+## 🎨 Design Tokens
+
+The `ui/Styles.qml` file centralizes colors, spacing and font sizes used across the UI.
+
+| Token | Description |
+|-------|-------------|
+| `spacingSmall` | Small spacing (4 px) |
+| `spacingMedium` | Default spacing (8 px) |
+| `spacingLarge` | Large spacing (16 px) |
+| `fontFamily` | Base font family |
+| `fontSizeSmall` | Small text size |
+| `fontSizeMedium` | Regular text size |
+| `fontSizeLarge` | Heading text size |
+| `primaryColor` | Main accent color |
+| `secondaryColor` | Secondary accent |
+| `tertiaryColor` | Success/tertiary color |
+| `elevationLow/Medium/High` | Shadow elevation levels |
+| `overlayOpacity` | Opacity for busy overlays |
+| `disabledOpacity` | Opacity for disabled content |
+
+---
+
 ## 📦 Setup
 
 1. Create and activate a virtual environment:
