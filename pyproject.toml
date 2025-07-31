@@ -1,22 +1,44 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cc_diagnostics"
 version = "0.1.0"
-description = "System diagnostics utility"
+description = "High-performance system diagnostics utility"
 readme = "README.md"
 authors = [{name = "Computer Connection"}]
 dependencies = [
-    "psutil",
-    "wmi",
-    "PySide6",
-    "jinja2",
-    "pdfkit",
+    "psutil>=5.9.0",  # Specify minimum version for performance improvements
+    "wmi; sys_platform == 'win32'",  # Only install on Windows
+    "PySide6>=6.4.0",  # Specify minimum version with performance improvements
+    "jinja2>=3.1.0",  # Specify minimum version
+    "pdfkit>=1.0.0",  # Specify minimum version
 ]
 requires-python = ">=3.11"
-classifiers = ["Programming Language :: Python :: 3"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: System Administrators",
+    "Topic :: System :: Systems Administration",
+    "Topic :: System :: Monitoring",
+    "Topic :: Utilities",
+]
+keywords = ["diagnostics", "system", "monitoring", "hardware", "performance"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "isort>=5.0.0",
+    "mypy>=1.0.0",
+]
+gpu = [
+    "py3nvml>=0.2.7",  # Optional GPU monitoring
+]
 
 [project.scripts]
 cc-diagnostics = "cc_diagnostics.diagnostics:main"
@@ -26,3 +48,48 @@ cc-diagnostics-gui = "gui:main"
 packages = ["cc_diagnostics"]
 py-modules = ["gui"]
 include-package-data = true
+
+[tool.setuptools.package-data]
+cc_diagnostics = ["report_templates/*", "logs/.gitkeep"]
+
+# Performance and quality tools configuration
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["cc_diagnostics", "gui"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
