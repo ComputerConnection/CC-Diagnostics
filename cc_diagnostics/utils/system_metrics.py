@@ -15,26 +15,50 @@ noticeable overhead.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import platform
 import time
 import subprocess
 import json
 import logging
-
-import psutil
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
-try:
-    import wmi  # type: ignore
-except Exception:  # pragma: no cover – optional dep
-    wmi = None  # type: ignore
+# Lazy import globals to speed up module loading
+_psutil = None
+_wmi = None
+_py3nvml = None
 
-try:
-    from py3nvml import py3nvml  # type: ignore
-except Exception:  # pragma: no cover – optional dep
-    py3nvml = None  # type: ignore
+def _get_psutil():
+    """Lazy import psutil to reduce startup time."""
+    global _psutil
+    if _psutil is None:
+        import psutil
+        _psutil = psutil
+    return _psutil
+
+def _get_wmi():
+    """Lazy import wmi to reduce startup time."""
+    global _wmi
+    if _wmi is None:
+        try:
+            import wmi  # type: ignore
+            _wmi = wmi
+        except Exception:  # pragma: no cover – optional dep
+            _wmi = False  # Mark as unavailable
+    return _wmi if _wmi is not False else None
+
+def _get_py3nvml():
+    """Lazy import py3nvml to reduce startup time."""
+    global _py3nvml
+    if _py3nvml is None:
+        try:
+            from py3nvml import py3nvml  # type: ignore
+            _py3nvml = py3nvml
+        except Exception:  # pragma: no cover – optional dep
+            _py3nvml = False  # Mark as unavailable
+    return _py3nvml if _py3nvml is not False else None
 
 
 @dataclass
@@ -49,12 +73,37 @@ class SystemMetrics:
     """
 
     # Internal state used to calculate deltas for network throughput
-    _last_net: psutil._common.snetio = field(default_factory=psutil.net_io_counters, init=False, repr=False)
+    _last_net: Optional[Any] = field(default=None, init=False, repr=False)
     _last_time: float = field(default_factory=time.time, init=False, repr=False)
+    
+    # Cache frequently accessed values
+    _gpu_info_cache: Optional[Dict[str, Any]] = field(default=None, init=False, repr=False)
+    _gpu_cache_time: float = field(default=0, init=False, repr=False)
+    _cpu_info_cache: Optional[Dict[str, Any]] = field(default=None, init=False, repr=False)
+    
+    @lru_cache(maxsize=1)
+    def _get_system_root(self) -> str:
+        """Get system root path with caching."""
+        return Path("").anchor or "\\"
 
     def _gpu_metrics(self) -> Dict[str, Any]:
         """Return GPU utilisation and temperature if available."""
+        
+        # Cache GPU info for 5 seconds since it doesn't change frequently
+        current_time = time.time()
+        if (self._gpu_info_cache is not None and 
+            current_time - self._gpu_cache_time < 5.0):
+            return self._gpu_info_cache.copy()
 
+        result = self._collect_gpu_metrics()
+        self._gpu_info_cache = result.copy()
+        self._gpu_cache_time = current_time
+        return result
+
+    def _collect_gpu_metrics(self) -> Dict[str, Any]:
+        """Internal method to collect GPU metrics without caching."""
+        py3nvml = _get_py3nvml()
+        
         # Prefer NVML because it provides both load and temperature
         if py3nvml is not None:
             try:
@@ -74,6 +123,7 @@ class SystemMetrics:
                 logger.debug("NVML read failed: %s", exc)
 
         # Fallback to WMI on Windows if NVML not available
+        wmi = _get_wmi()
         if wmi is not None and platform.system() == "Windows":
             try:
                 c = wmi.WMI(namespace="root\\CIMV2")
@@ -97,14 +147,27 @@ class SystemMetrics:
         }
 
     def _cpu_metrics(self) -> Dict[str, Any]:
-        return {
-            "logical_cores": psutil.cpu_count(logical=True),
-            "physical_cores": psutil.cpu_count(logical=False) or 0,
+        """Get CPU metrics with basic caching for static info."""
+        psutil = _get_psutil()
+        
+        # Cache static CPU info (core counts don't change)
+        if self._cpu_info_cache is None:
+            self._cpu_info_cache = {
+                "logical_cores": psutil.cpu_count(logical=True),
+                "physical_cores": psutil.cpu_count(logical=False) or 0,
+            }
+        
+        # Get dynamic metrics
+        cpu_info = self._cpu_info_cache.copy()
+        cpu_info.update({
             "usage_percent": psutil.cpu_percent(interval=0.1),
             "freq_mhz": psutil.cpu_freq().current if psutil.cpu_freq() else 0,
-        }
+        })
+        return cpu_info
 
     def _ram_metrics(self) -> Dict[str, Any]:
+        """Get RAM metrics."""
+        psutil = _get_psutil()
         vm = psutil.virtual_memory()
         return {
             "total_gb": round(vm.total / 1e9, 2),
@@ -113,7 +176,9 @@ class SystemMetrics:
         }
 
     def _disk_metrics(self) -> Dict[str, Any]:
-        root = Path("").anchor or "\\"  # cross-platform root path
+        """Get disk metrics."""
+        psutil = _get_psutil()
+        root = self._get_system_root()
         usage = psutil.disk_usage(root)
         return {
             "total_gb": round(usage.total / 1e9, 2),
@@ -122,8 +187,22 @@ class SystemMetrics:
         }
 
     def _network_metrics(self) -> Dict[str, Any]:
+        """Get network metrics with rate calculation."""
+        psutil = _get_psutil()
         now = time.time()
         stats = psutil.net_io_counters()
+        
+        # Initialize on first call
+        if self._last_net is None:
+            self._last_net = stats
+            self._last_time = now
+            return {
+                "bytes_sent": stats.bytes_sent,
+                "bytes_recv": stats.bytes_recv,
+                "sent_rate_bps": 0,
+                "recv_rate_bps": 0,
+            }
+        
         elapsed = max(now - self._last_time, 1e-3)
         sent_rate = (stats.bytes_sent - self._last_net.bytes_sent) / elapsed
         recv_rate = (stats.bytes_recv - self._last_net.bytes_recv) / elapsed
@@ -137,6 +216,8 @@ class SystemMetrics:
         }
 
     def _temperatures(self) -> Dict[str, Any]:
+        """Get temperature metrics."""
+        psutil = _get_psutil()
         try:
             temps = psutil.sensors_temperatures()
         except Exception:  # pragma: no cover – unsupported platform
@@ -148,6 +229,7 @@ class SystemMetrics:
                 label = (entry.label or "").lower()
                 if cpu is None and ("package" in label or "cpu" in label):
                     cpu = entry.current
+                    break  # Found CPU temperature, no need to continue
         return {
             "cpu_c": round(cpu, 1) if cpu is not None else "Unavailable",
         }
