@@ -9,11 +9,8 @@ description = "System diagnostics utility"
 readme = "README.md"
 authors = [{name = "Computer Connection"}]
 dependencies = [
-    "psutil",
-    "wmi",
-    "PySide6",
-    "jinja2",
-    "pdfkit",
+    "psutil>=5.9",
+    "jinja2>=3.1",
 ]
 requires-python = ">=3.11"
 classifiers = ["Programming Language :: Python :: 3"]
@@ -21,6 +18,11 @@ classifiers = ["Programming Language :: Python :: 3"]
 [project.scripts]
 cc-diagnostics = "cc_diagnostics.diagnostics:main"
 cc-diagnostics-gui = "gui:main"
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.6"]
+pdf = ["pdfkit>=1.0"]
+windows = ["wmi>=1.5 ; platform_system == 'Windows'"]
 
 [tool.setuptools]
 packages = ["cc_diagnostics"]
