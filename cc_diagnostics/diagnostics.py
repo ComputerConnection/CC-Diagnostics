@@ -63,6 +63,11 @@ def parse_args(args: Sequence[str] | None = None) -> argparse.Namespace:
         default=None,
         help="URL to POST the report JSON to. Overrides settings.json if provided.",
     )
+    parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="Do not open the generated HTML report in a browser.",
+    )
     return parser.parse_args(args)
 
 
@@ -118,6 +123,19 @@ def main(
     )
     with open(out_file, "w") as f:
         json.dump(report, f, indent=2)
+
+    # Render HTML report next to the JSON output
+    html_path = os.path.splitext(out_file)[0] + ".html"
+    try:
+        from cc_diagnostics.report_renderer import render_html_report
+
+        render_html_report(report, html_path)
+        if not opts.no_browser:
+            import webbrowser
+
+            webbrowser.open(f"file://{html_path}")
+    except Exception:  # pragma: no cover – rendering is best-effort
+        pass
 
     upload_ok: bool | None = None
     upload_error: str | None = None
